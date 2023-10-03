@@ -1,11 +1,11 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
     url: jdbc:h2:mem:mydb
-    username: sa
-    password: password
+    username: user_sa
+    password: user123
     driverClassName: org.h2.Driver
   jpa:
     spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
@@ -14,4 +14,4 @@ spring:
       enabled: true
 
 pollService:
-  url: 172.0.0.1:8081
+  url: 127.0.0.1:8082
