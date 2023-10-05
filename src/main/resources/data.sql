@@ -5,7 +5,7 @@ CREATE TABLE user (
     first_name varchar(300),
     last_name varchar(300) NOT NULL DEFAULT '',
     email varchar(300) NOT NULL DEFAULT '',
-    age int(2),
+    date_birth DATE NOT NULL DEFAULT '',
     address varchar(300) NOT NULL DEFAULT 'Israel',
     joined_date DATE NOT NULL DEFAULT CURDATE(),
     is_registered boolean NOT NULL DEFAULT false,

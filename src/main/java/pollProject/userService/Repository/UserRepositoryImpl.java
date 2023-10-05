@@ -21,42 +21,41 @@ public class UserRepositoryImpl implements UserRepository {
     private static final Logger logger = LoggerFactory.getLogger(UserRepositoryImpl.class);
     @Override
     public void createUser(User user) {
-        String sql = "INSERT INTO " + USER_TABLE_NAME + " " + "(first_name, last_name, email, age, address) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO " + USER_TABLE_NAME + " " + "(first_name, last_name, email, date_birth, address) VALUES (?, ?, ?, ?, ?)";
         jdbcTemplate.update(
                 sql,
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
-                user.getAge(),
+                user.getDateBirth(),
                 user.getUserAddress()
         );
     }
     @Override
     public User readUser(Long id) {
-        logger.info(String.format("IN THE REPOSITORY. A REQUEST TO READ USER WITH ID:\"%s\" RECEIVED.",id));
         String sql = "SELECT * FROM  " + USER_TABLE_NAME + " WHERE id=?";
         try {
             return jdbcTemplate.queryForObject(sql, userMapper, id);
         } catch (EmptyResultDataAccessException e) {
-            logger.error(String.format("IN THE REPOSITORY. USER WITH ID:\"%s\" IS NOT EXIST :-(",id));
+            logger.error(String.format("READING: USER WITH ID:\"%s\" IS NOT EXIST!",id));
             return null;
         }
     }
     @Override
-    public void updateUser(User user) {
-        String sql = "UPDATE " + USER_TABLE_NAME + " SET first_name=?, last_name=?, email=?, age=?, address=? WHERE id=?";
+    public void updateUser(User user) throws EmptyResultDataAccessException{
+        String sql = "UPDATE " + USER_TABLE_NAME + " SET first_name=?, last_name=?, email=?, date_birth=?, address=? WHERE id=?";
         try {
             jdbcTemplate.update(
                     sql,
                     user.getFirstName(),
                     user.getLastName(),
                     user.getEmail(),
-                    user.getAge(),
+                    user.getDateBirth(),
                     user.getUserAddress(),
                     user.getUserId()
             );
         } catch (EmptyResultDataAccessException e) {
-            logger.warn(String.format("USER WITH ID %s IS NOT EXIST",user.getUserId()));
+            logger.error(String.format("\"%s\". UPDATING: USER WITH ID:\"%s\" IS NOT EXIST. IMPOSSIBLE TO UPDATE :-(",e,user.getUserId()));
         }
     }
     @Override
@@ -76,7 +75,7 @@ public class UserRepositoryImpl implements UserRepository {
         try {
             return jdbcTemplate.query(sql, userMapper);
         } catch (EmptyResultDataAccessException e) {
-            logger.info("USER LIST IS EMPTY");
+            logger.warn("READING ALL: USER LIST IS EMPTY!");
             return null;
         }
     }

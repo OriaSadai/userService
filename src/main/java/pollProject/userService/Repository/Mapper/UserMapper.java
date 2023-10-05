@@ -16,7 +16,7 @@ public class UserMapper implements RowMapper<User> {
                 rs.getString("first_name"),
                 rs.getString("last_name"),
                 rs.getString("email"),
-                rs.getInt("age"),
+                rs.getDate("date_birth"),
                 rs.getString("address"),
                 rs.getDate("joined_date"),
                 rs.getBoolean("is_registered")

@@ -9,10 +9,12 @@ import pollProject.userService.Model.User;
 import pollProject.userService.Poll.PollService;
 import pollProject.userService.Repository.UserRepository;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
 
-import static pollProject.userService.ConstVariables.ConstVariables.REGISTER_TOKEN;
-import static pollProject.userService.ConstVariables.ConstVariables.UNREGISTER_TOKEN;
+import static pollProject.userService.ConstVariables.ConstVariables.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -28,7 +30,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public User readUser(Long id) {
         User userToRead = userRepository.readUser(id);
-        logger.info(String.format("IN THE SERVICE: A QUERY TO READ USER ID:\"%s\", IS_REGISTERED=\"%s\".",id,userToRead.getRegistered()));
         return userToRead;
     }
     @Override
@@ -36,45 +37,70 @@ public class UserServiceImpl implements UserService {
         userRepository.updateUser(user);
     }
     @Override
-    public void deleteUser(Long id) {
+    public void deleteUser(Long id, String delToken) {
+        if (!Objects.equals(delToken, DELETE_TOKEN)) {
+            logger.error(String.format("INCORRECT PASSWORD! CANNOT DELETE USER WITH ID:\"%s\"",id));
+            return;
+        }
+        User userToRemove = userRepository.readUser(id);
+        if (userToRemove == null) {
+            logger.warn(String.format("USER WITH ID:\"%s\" NOT EXIST. IMPOSSIBLE TO DELETE!",id));
+            return;
+        }
+        if (userToRemove.getRegistered()) {
+            logger.info(String.format("USER WITH ID:\"%s\" IS ALREADY REGISTERED. SENDING AN API TO POLL TO DELETE ANSWERS.",id));
+            pollService.deleteAnswersByUserId(id, DELETE_TOKEN_TO_POLL_SERVICE);
+        }
         userRepository.deleteUser(id);
-        pollService.deleteAnswersByUserId(id);
+        logger.info(String.format("USER ID:\"%s\" HAS DELETED!",id));
     }
     @Override
-    public void handleRegistration(Long id, String token) {
-        logger.info(String.format("IN THE SERVICE: A REQUEST TO HANDLE REGISTRATION STATUS TO USER ID:\"%s\" WITH TOKEN:\"%s\" RECEIVED.",id, token));
+    public void handleRegistration(Long id, String regToken) throws ParseException {
         User userToHandle = userRepository.readUser(id);
-        if (userToHandle != null) {
-            if (Objects.equals(token, REGISTER_TOKEN)) {
-                logger.info(String.format("IN THE SERVICE: REGISTER TOKEN CORRECT. WILL REGISTER :-)"));
-                userRepository.handleRegistration(id, true);
-            } else if (Objects.equals(token, UNREGISTER_TOKEN)) {
-                logger.warn(String.format("IN THE SERVICE: UNREGISTER TOKEN CORRECT. WILL REMOVE!"));
-                userRepository.handleRegistration(id, false);
-                pollService.deleteAnswersByUserId(id);
-            } else {
-                logger.error(String.format("IN THE SERVICE: THE TOKEN:\"%s\" IS INCORRECT :-(",token));
-            }
+        if (userToHandle == null) {
+            logger.error(String.format("USER WITH ID:\"%s\" IS NOT EXIST!",id));
+            return;
+        }
+        if (!checkAgePermission(userToHandle.getDateBirth())) {
+            logger.warn(String.format("THE USER ID:\"%s\" IS UNDER THE AUTHORIZED AGE! CAN'T BE REGISTERED!!",id));
+            return;
+        }
+        if (Objects.equals(regToken, REGISTER_TOKEN)) {
+            logger.info(String.format("REGISTER TOKEN FOR USER ID:\"%s\" CORRECT. WILL REGISTER :-)",id));
+            userRepository.handleRegistration(id, true);
+        } else if (Objects.equals(regToken, UNREGISTER_TOKEN)) {
+            logger.warn(String.format("UNREGISTER TOKEN FOR USER ID:\"%s\" CORRECT. WILL REMOVE!",id));
+            userRepository.handleRegistration(id, false);
+            pollService.deleteAnswersByUserId(id, DELETE_TOKEN_TO_POLL_SERVICE);
         } else {
-            logger.error(String.format("IN THE SERVICE: USER WITH ID:\"%s\" IS NOT EXIST :-(",id));
+            logger.error("TOKEN IS INCORRECT :-(");
         }
     }
     @Override
     public Boolean checkConfirmed(Long id) {
         User userToConfirm = userRepository.readUser(id);
 
-        if ((!(userToConfirm == null))) {
-            logger.info(String.format("IN THE SERVICE: THE CONFIRMATION PROCESS TO USER ID:\"%s\". IS_REGISTERED:\"%s\".",userToConfirm.getUserId(),userToConfirm.getRegistered()));
+        if (!(userToConfirm == null)) {
             if (userToConfirm.getRegistered()) {
-                logger.info(String.format("IN THE SERVICE: THE USER WITH ID:\"%s\" IS CONFIRMED :-)",id));
+                logger.info(String.format("THE USER WITH ID:\"%s\" IS CONFIRMED :-)",id));
                 return true;
             } else {
-                logger.warn(String.format("IN THE SERVICE: THE USER WITH ID:\"%s\" IS NOT CONFIRMED :-(",id));
+                logger.warn(String.format("THE USER WITH ID:\"%s\" IS NOT CONFIRMED :-(",id));
                 return false;
             }
         } else {
-            logger.error(String.format("IN THE SERVICE: USER WITH ID:\"%s\" IS NOT EXIST :-(",id));
-            return null;
+            return false;
         }
+    }
+    public static boolean checkAgePermission(Date givenDate) throws ParseException {
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date givenDateInParse = sdf.parse(givenDate.toString());
+        Date currentDate = new Date();
+
+        long millisecondsDifference = currentDate.getTime() - givenDateInParse.getTime();
+        double yearsDifference = millisecondsDifference / (365.25 * 24 * 60 * 60 * 1000);
+
+        return yearsDifference > AGE_LIMIT || !TO_OPERATE_AGE_LIMIT;
     }
 }

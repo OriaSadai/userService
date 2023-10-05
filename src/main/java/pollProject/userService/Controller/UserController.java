@@ -1,19 +1,18 @@
 package pollProject.userService.Controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pollProject.userService.Model.User;
 import pollProject.userService.Service.UserService;
+
+import java.text.ParseException;
 
 @RestController
 @RequestMapping(value = "/user")
 public class UserController {
     @Autowired
     private UserService userService;
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     @PostMapping("/create")
     public void createUser(@RequestBody User user) throws JsonProcessingException {
         userService.createUser(user);
@@ -27,20 +26,15 @@ public class UserController {
         userService.updateUser(user);
     }
     @DeleteMapping("/delete")
-    public void deleteUser(@RequestParam(value = "id") Long id) {
-        userService.deleteUser(id);
+    public void deleteUser(@RequestParam(value = "id") Long id, @RequestHeader(value = "delToken") String delToken) {
+        userService.deleteUser(id, delToken);
     }
     @PutMapping(value = "/register")
-    public void handleUserRegistration(@RequestParam(value = "id") Long id, @RequestHeader(value = "token") String token) {
-        logger.info(String.format("IN THE CONTROLLER: A REQUEST TO HANDLE REGISTRATION STATUS FOR USER ID:\"%s\". TOKEN:\"%s\".",id,token));
-        userService.handleRegistration(id, token);
+    public void handleUserRegistration(@RequestParam(value = "id") Long id, @RequestHeader(value = "regToken") String regToken) throws ParseException {
+        userService.handleRegistration(id, regToken);
     }
     @GetMapping(value = "/confirm/{id}")
     public Boolean checkConfirmed(@PathVariable(value = "id") Long id) {
-        logger.info(String.format("IN THE CONTROLLER: A REQUEST FROM POLL SERVICE TO CHECK CONFIRMATION STATUS FOR USER ID:\"%s\".",id));
-        Boolean isConfirmed = null;
-        isConfirmed = userService.checkConfirmed(id);
-        logger.info(String.format("IN THE CONTROLLER: THE CONFIRMATION STATUS FOR USER ID:\"%s\" IS:\"%s\"",id,isConfirmed));
-        return isConfirmed;
+        return userService.checkConfirmed(id);
     }
 }

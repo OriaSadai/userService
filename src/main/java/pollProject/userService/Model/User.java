@@ -1,12 +1,7 @@
 package pollProject.userService.Model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.sql.Date;
-import java.time.LocalDate;
-
-import static pollProject.userService.ConstVariables.ConstVariables.REGISTER_TOKEN;
-import static pollProject.userService.ConstVariables.ConstVariables.UNREGISTER_TOKEN;
 
 public class User {
     @JsonProperty(value = "id")
@@ -14,18 +9,18 @@ public class User {
     private String firstName;
     private String LastName;
     private String email;
-    private int age;
+    private Date dateBirth;
     @JsonProperty(value = "address")
     private String userAddress;
     private Date joinedDate;
     private Boolean isRegistered;
     public User() {}
-    public User(Long userId, String firstName, String lastName, String email, int age, String userAddress, Date joinedDate, Boolean isRegistered) {
+    public User(Long userId, String firstName, String lastName, String email, Date dateBirth, String userAddress, Date joinedDate, Boolean isRegistered) {
         this.userId = userId;
         this.firstName = firstName;
         this.LastName = lastName;
         this.email = email;
-        this.age = age;
+        this.dateBirth = dateBirth;
         this.userAddress = userAddress;
         this.joinedDate = joinedDate;
         this.isRegistered = isRegistered;
@@ -42,8 +37,8 @@ public class User {
     public String getEmail() {
         return email;
     }
-    public int getAge() {
-        return age;
+    public Date getDateBirth() {
+        return dateBirth;
     }
     public String getUserAddress() {
         return userAddress;
@@ -66,8 +61,8 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
-    public void setAge(int age) {
-        this.age = age;
+    public void setDateBirth(Date dateBirth) {
+        this.dateBirth = dateBirth;
     }
     public void setUserAddress(String userAddress) {
         this.userAddress = userAddress;
